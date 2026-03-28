@@ -1,11 +1,11 @@
-##Planejamento do projeto de QA
+Planejamento do projeto de QA
 
-##Tema Escolhido
+-Tema Escolhido
 Tema: Sistema de Agendamento
-##Proposta:
+-Proposta:
 Desenvolver um sistema simples de agendamento onde usuários possam marcar, visualizar e cancelar horários para serviços (ex: consultas, atendimentos ou reservas). O sistema permitirá testar funcionalidades básicas como cadastro, validação de dados e controle de horários disponíveis.
 
-##Descrição do Sistema
+-Descrição do Sistema
 Descrever de forma objetiva:
 O que o sistema faz:
 Permite que usuários realizem agendamentos de horários, consultem seus agendamentos e cancelem quando necessário.
@@ -14,7 +14,7 @@ Clientes que desejam agendar horários e administradores que gerenciam os agenda
 Qual problema ele resolve:
 Evita conflitos de horários e organiza o controle de atendimentos de forma simples e automatizada. 
 Orientação: evitem textos longos. Se não conseguem explicar em poucas linhas, o sistema ainda não está claro.
-##Funcionalidades Principais
+-Funcionalidades Principais
 Listar pelo menos 5 funcionalidades.
 Cadastro de usuário
 Login de usuário
@@ -23,7 +23,7 @@ Consulta de agendamentos
 Cancelamento de agendamento
 Validação de horários disponíveis
 Orientação: pensem em funcionalidades simples, mas que possam ser testadas.
-##Definição Inicial de Testes
+-Definição Inicial de Testes
 Criar pelo menos 5 cenários de teste.
 Cada cenário deve indicar:
 Criar agendamento em horário já ocupado → sistema deve impedir
@@ -42,8 +42,7 @@ pytest para testes automatizados básicos
 Testes manuais para validação das funcionalidades
 Uso de comandos simples (como print) para verificação do comportamento do sistema
 
-
-##Organização do Grupo
+-Organização do Grupo
 Definir quem ficará responsável por:
 Desenvolvimento (interface):
 Guilherme, Murilo e Dennis
