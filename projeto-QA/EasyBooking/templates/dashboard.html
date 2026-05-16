@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 id="greeting">Olá, {{ session.usuario }}!</h1>
+    <p class="page-sub" id="today-date"></p>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ agendamentos | length }}</span>
+      <span class="stat-label">Agendamentos ativos</span>
+    </div>
+  </div>
+
+  <div class="stat-card stat-amber">
+    <div class="stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div class="stat-info">
+      {% if proximo %}
+      <span class="stat-value">{{ proximo.hora }}</span>
+      <span class="stat-label">Próximo — {{ proximo.data | data_br }}</span>
+      {% else %}
+      <span class="stat-value">—</span>
+      <span class="stat-label">Sem próximo agendamento</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="stat-card stat-green">
+    <div class="stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ total_historico }}</span>
+      <span class="stat-label">Total histórico</span>
+    </div>
+  </div>
+</div>
+
+<!-- Novo Agendamento -->
+<div class="card">
+  <div class="card-header">
+    <h3>Novo Agendamento</h3>
+  </div>
+  <div class="card-body">
+    <form method="POST" id="booking-form" class="booking-form">
+
+      <div class="booking-grid">
+        <div class="field full-width">
+          <label for="servico">Tipo de serviço</label>
+          <select name="servico" id="servico" required>
+            <option value="" disabled selected>Selecione o serviço...</option>
+            {% for s in servicos %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="data">Data</label>
+          <input type="date" id="data" name="data" required>
+        </div>
+
+        <div class="field">
+          <label>Horário disponível</label>
+          <div class="time-slots" id="time-slots">
+            {% for h in horarios %}
+            <label class="time-slot">
+              <input type="radio" name="hora" value="{{ h }}" required>
+              {{ h }}
+            </label>
+            {% endfor %}
+          </div>
+          <p class="slots-hint" id="slots-hint">Selecione uma data para ver os horários disponíveis.</p>
+        </div>
+
+        <div class="field full-width">
+          <label for="observacoes">
+            Observações
+            <span class="field-hint">opcional — <span id="obs-count">0</span>/200</span>
+          </label>
+          <textarea id="observacoes" name="observacoes" maxlength="200"
+                    placeholder="Alguma informação adicional para o atendimento..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button type="submit" class="btn-primary">Confirmar agendamento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Agendamentos Ativos -->
+<div class="card">
+  <div class="card-header">
+    <h3>Agendamentos Ativos</h3>
+    <span class="badge-count">{{ agendamentos | length }}</span>
+  </div>
+  <div class="card-body no-pad">
+    {% if agendamentos %}
+    <table>
+      <thead>
+        <tr>
+          <th>Serviço</th>
+          <th>Data</th>
+          <th>Horário</th>
+          <th>Observações</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ag in agendamentos %}
+        <tr>
+          <td>
+            <span class="service-badge">{{ ag.servico }}</span>
+          </td>
+          <td>
+            <div class="date-cell">
+              <span class="date-main">{{ ag.data | data_br }}</span>
+              <span class="date-sub">{{ ag.data | dia_semana }}</span>
+            </div>
+          </td>
+          <td><span class="time-tag">{{ ag.hora }}</span></td>
+          <td class="obs-cell">{{ ag.observacoes or '—' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('cancelar', ag_id=ag.id) }}"
+                  onsubmit="return confirm('Cancelar este agendamento?')">
+              <button type="submit" class="btn-danger-sm">Cancelar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <p>Nenhum agendamento ativo.</p>
+      <span>Crie seu primeiro agendamento acima.</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Saudação dinâmica
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  document.getElementById('greeting').textContent = `${greet}, {{ session.usuario }}!`;
+
+  // Data de hoje
+  const now = new Date();
+  const opts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  document.getElementById('today-date').textContent =
+    now.toLocaleDateString('pt-BR', opts).replace(/^\w/, c => c.toUpperCase());
+
+  // Data mínima = hoje
+  const todayISO = now.toISOString().split('T')[0];
+  const dataInput = document.getElementById('data');
+  dataInput.min = todayISO;
+
+  // Contador de observações
+  const obsInput = document.getElementById('observacoes');
+  const obsCount = document.getElementById('obs-count');
+  obsInput.addEventListener('input', () => {
+    obsCount.textContent = obsInput.value.length;
+  });
+
+  // Atualizar slots ao mudar a data
+  dataInput.addEventListener('change', async function () {
+    const data = this.value;
+    if (!data) return;
+
+    const res = await fetch(`/slots?data=${data}`);
+    const { ocupados } = await res.json();
+    const hint = document.getElementById('slots-hint');
+
+    document.querySelectorAll('.time-slot').forEach(label => {
+      const input = label.querySelector('input');
+      const ocupado = ocupados.includes(input.value);
+      label.classList.toggle('occupied', ocupado);
+      input.disabled = ocupado;
+      if (ocupado && input.checked) input.checked = false;
+    });
+
+    const livres = 9 - ocupados.length;
+    hint.textContent = livres > 0
+      ? `${livres} horário${livres > 1 ? 's' : ''} disponível${livres > 1 ? 'is' : ''} nesta data.`
+      : 'Todos os horários desta data estão ocupados.';
+  });
+</script>
+{% endblock %}

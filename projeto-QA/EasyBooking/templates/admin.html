@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Administração{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Painel Administrativo</h1>
+    <p class="page-sub">Visão geral do sistema</p>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ total_usuarios }}</span>
+      <span class="stat-label">Usuários cadastrados</span>
+    </div>
+  </div>
+
+  <div class="stat-card stat-amber">
+    <div class="stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value">{{ agendamentos | length }}</span>
+      <span class="stat-label">Agendamentos ativos</span>
+    </div>
+  </div>
+
+  <div class="stat-card stat-green">
+    <div class="stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div class="stat-info">
+      {% if servico_popular %}
+      <span class="stat-value" style="font-size:1rem; line-height:1.3">{{ servico_popular.servico }}</span>
+      <span class="stat-label">Serviço mais agendado ({{ servico_popular.total }}x)</span>
+      {% else %}
+      <span class="stat-value">—</span>
+      <span class="stat-label">Sem dados de serviço</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Todos os Agendamentos -->
+<div class="card">
+  <div class="card-header">
+    <h3>Todos os Agendamentos Ativos</h3>
+    <span class="badge-count">{{ agendamentos | length }}</span>
+  </div>
+  <div class="card-body no-pad">
+    {% if agendamentos %}
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Usuário</th>
+          <th>Serviço</th>
+          <th>Data</th>
+          <th>Horário</th>
+          <th>Observações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ag in agendamentos %}
+        <tr>
+          <td class="id-cell">{{ ag.id }}</td>
+          <td>
+            <div class="user-chip">
+              <span class="chip-avatar">{{ ag.usuario[0] | upper }}</span>
+              {{ ag.usuario }}
+            </div>
+          </td>
+          <td><span class="service-badge">{{ ag.servico }}</span></td>
+          <td>
+            <div class="date-cell">
+              <span class="date-main">{{ ag.data | data_br }}</span>
+              <span class="date-sub">{{ ag.data | dia_semana }}</span>
+            </div>
+          </td>
+          <td><span class="time-tag">{{ ag.hora }}</span></td>
+          <td class="obs-cell">{{ ag.observacoes or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p>Nenhum agendamento ativo no sistema.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Usuários -->
+<div class="card">
+  <div class="card-header">
+    <h3>Usuários Cadastrados</h3>
+    <span class="badge-count">{{ total_usuarios }}</span>
+  </div>
+  <div class="card-body no-pad">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Perfil</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td>
+            <div class="user-chip">
+              <span class="chip-avatar">{{ u.nome[0] | upper }}</span>
+              {{ u.nome }}
+            </div>
+          </td>
+          <td><span class="role-badge role-{{ u.role }}">{{ u.role }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
