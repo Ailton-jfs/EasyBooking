@@ -19,6 +19,8 @@ def init_db(conn):
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT UNIQUE NOT NULL,
+            nome_completo TEXT NOT NULL DEFAULT '',
+            email TEXT UNIQUE NOT NULL DEFAULT '',
             senha_hash BLOB NOT NULL,
             role TEXT NOT NULL DEFAULT 'user',
             tentativas INTEGER NOT NULL DEFAULT 0,
@@ -35,4 +37,11 @@ def init_db(conn):
             criado_em TEXT DEFAULT (datetime('now', 'localtime'))
         );
     """)
+    conn.commit()
+
+    columns = [row[1] for row in conn.execute("PRAGMA table_info(usuarios)").fetchall()]
+    if "nome_completo" not in columns:
+        conn.execute("ALTER TABLE usuarios ADD COLUMN nome_completo TEXT NOT NULL DEFAULT ''")
+    if "email" not in columns:
+        conn.execute("ALTER TABLE usuarios ADD COLUMN email TEXT NOT NULL DEFAULT ''")
     conn.commit()

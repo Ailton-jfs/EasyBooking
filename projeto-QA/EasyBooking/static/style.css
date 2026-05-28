@@ -295,6 +295,27 @@ body {
   padding: 20px;
 }
 
+.card-body p {
+  margin-bottom: 8px;
+}
+
+.back-btn {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  font-size: .875rem;
+  text-decoration: none;
+}
+
+/* Responsividade básica */
+@media (max-width: 900px) {
+  .booking-grid { grid-template-columns: 1fr; }
+  .content { padding: 18px; max-width: 100%; }
+  .sidebar { position: relative; width: 100%; height: auto; top: auto; left: auto; }
+  .layout { flex-direction: column; }
+  .content { margin-left: 0; }
+}
+
 .card-body.no-pad {
   padding: 0;
 }
@@ -433,6 +454,13 @@ body {
   margin-top: 8px;
 }
 
+.slots-suggestion {
+  font-size: .85rem;
+  color: var(--text);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
 .form-footer {
   padding-top: 20px;
   border-top: 1px solid var(--border);
@@ -453,7 +481,44 @@ body {
   transition: background .15s;
 }
 
-.btn-primary:hover { background: var(--primary-hover); }
+..btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary {
+  padding: 9px 16px;
+  background: #f8fafc;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 10px;
+}
+
+.btn-secondary:hover {
+  background: #f1f5f9;
+}
+
+.hidden { display: none; }
+
+.custom-time-field {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.field-help {
+  font-size: .75rem;
+  color: var(--text-muted);
+}
+
+.small-note {
+  margin-top: 12px;
+  font-size: .8rem;
+  color: var(--text-muted);
+}
 
 .btn-full { width: 100%; padding: 11px 20px; }
 

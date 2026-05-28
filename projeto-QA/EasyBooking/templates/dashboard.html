@@ -9,6 +9,17 @@
   </div>
 </div>
 
+<div class="card">
+  <div class="card-header">
+    <h3>Meu perfil</h3>
+  </div>
+  <div class="card-body">
+    <p><strong>Nome:</strong> {{ session.nome_completo or session.usuario }}</p>
+    <p><strong>Email:</strong> {{ session.email or '—' }}</p>
+    <a href="{{ url_for('perfil') }}" class="btn-primary">Editar perfil</a>
+  </div>
+</div>
+
 <!-- Stats -->
 <div class="stats-row">
   <div class="stat-card stat-blue">
@@ -50,8 +61,8 @@
       </svg>
     </div>
     <div class="stat-info">
-      <span class="stat-value">{{ total_historico }}</span>
-      <span class="stat-label">Total histórico</span>
+      <span class="stat-value">{{ historico | length }}</span>
+      <span class="stat-label">Últimos agendamentos</span>
     </div>
   </div>
 </div>
@@ -90,7 +101,14 @@
             </label>
             {% endfor %}
           </div>
+          <button type="button" class="btn-secondary" id="custom-time-toggle">Outro horário</button>
+          <div class="custom-time-field hidden" id="custom-time-field">
+            <label for="hora-custom">Escolha um horário</label>
+            <input type="time" id="hora-custom" name="hora" step="300" disabled>
+            <p class="field-help">Use este campo para horários diferentes de {{ horarios | join(', ') }}.</p>
+          </div>
           <p class="slots-hint" id="slots-hint">Selecione uma data para ver os horários disponíveis.</p>
+          <p class="slots-suggestion hidden" id="slots-suggestion"></p>
         </div>
 
         <div class="field full-width">
@@ -166,6 +184,41 @@
   </div>
 </div>
 
+<div class="card">
+  <div class="card-header">
+    <h3>Histórico recente</h3>
+  </div>
+  <div class="card-body no-pad">
+    {% if historico %}
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Horário</th>
+          <th>Serviço</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ag in historico %}
+        <tr>
+          <td>{{ ag.data | data_br }}</td>
+          <td>{{ ag.hora }}</td>
+          <td>{{ ag.servico }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if total_historico > historico | length %}
+    <p class="small-note">Mostrando os {{ historico | length }} registros mais recentes de {{ total_historico }}.</p>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+      <p>Sem histórico recente.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -189,31 +242,79 @@
   // Contador de observações
   const obsInput = document.getElementById('observacoes');
   const obsCount = document.getElementById('obs-count');
+  const slotsSuggestion = document.getElementById('slots-suggestion');
   obsInput.addEventListener('input', () => {
     obsCount.textContent = obsInput.value.length;
   });
 
   // Atualizar slots ao mudar a data
+  let customMode = false;
+  const customToggle = document.getElementById('custom-time-toggle');
+  const customField = document.getElementById('custom-time-field');
+  const customInput = document.getElementById('hora-custom');
+  const slotLabels = document.querySelectorAll('.time-slot');
+
+  function updateSlotState(ocupados) {
+    slotLabels.forEach(label => {
+      const input = label.querySelector('input');
+      const ocupado = ocupados.includes(input.value);
+      label.classList.toggle('occupied', ocupado);
+      input.disabled = ocupado || customMode;
+      input.dataset.occupied = ocupado ? 'true' : 'false';
+      if (ocupado && input.checked) input.checked = false;
+    });
+  }
+
   dataInput.addEventListener('change', async function () {
     const data = this.value;
     if (!data) return;
 
     const res = await fetch(`/slots?data=${data}`);
-    const { ocupados } = await res.json();
+    const { ocupados, proximo, proximo_data } = await res.json();
     const hint = document.getElementById('slots-hint');
 
-    document.querySelectorAll('.time-slot').forEach(label => {
-      const input = label.querySelector('input');
-      const ocupado = ocupados.includes(input.value);
-      label.classList.toggle('occupied', ocupado);
-      input.disabled = ocupado;
-      if (ocupado && input.checked) input.checked = false;
-    });
+    updateSlotState(ocupados);
 
-    const livres = 9 - ocupados.length;
+    const livres = {{ horarios | length }} - ocupados.length;
     hint.textContent = livres > 0
       ? `${livres} horário${livres > 1 ? 's' : ''} disponível${livres > 1 ? 'is' : ''} nesta data.`
       : 'Todos os horários desta data estão ocupados.';
+
+    // Mostrar sugestão: horário no mesmo dia ou próximo dia disponível
+    if (proximo) {
+      slotsSuggestion.textContent = `Próximo horário livre: ${proximo}.`;
+      slotsSuggestion.classList.remove('hidden');
+    } else if (proximo_data) {
+      // formato dd/mm/yyyy
+      const d = new Date(proximo_data.data + 'T00:00:00');
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const ano = d.getFullYear();
+      slotsSuggestion.textContent = `Próximo disponível: ${dia}/${mes}/${ano} às ${proximo_data.hora}.`;
+      slotsSuggestion.classList.remove('hidden');
+    } else {
+      slotsSuggestion.textContent = 'Nenhum horário livre nesta data.';
+      slotsSuggestion.classList.remove('hidden');
+    }
+  });
+
+  customToggle.addEventListener('click', () => {
+    customMode = !customMode;
+    customField.classList.toggle('hidden', !customMode);
+    customInput.disabled = !customMode;
+
+    if (customMode) {
+      slotLabels.forEach(label => label.querySelector('input').disabled = true);
+      slotLabels.forEach(label => label.querySelector('input').checked = false);
+      customToggle.textContent = 'Usar horário da lista';
+      customInput.focus();
+    } else {
+      slotLabels.forEach(label => {
+        const input = label.querySelector('input');
+        input.disabled = input.dataset.occupied === 'true';
+      });
+      customToggle.textContent = 'Outro horário';
+    }
   });
 </script>
 {% endblock %}

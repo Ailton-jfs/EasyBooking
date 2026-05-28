@@ -8,9 +8,9 @@ from app.auth import registrar, acessar_painel_admin
 def conn():
     c = get_connection()
     init_db(c)
-    registrar(c, "admin", "Admin123", role="admin")
-    registrar(c, "joao", "Joao123", role="user")
-    registrar(c, "visitante", "Visit123", role="guest")
+    registrar(c, "admin", "Admin123", "Administrador", "admin@easybooking.com", role="admin")
+    registrar(c, "joao", "Joao123", "João Silva", "joao@easybooking.com", role="user")
+    registrar(c, "visitante", "Visit123", "Visitante Demo", "visitante@easybooking.com", role="guest")
     return c
 
 

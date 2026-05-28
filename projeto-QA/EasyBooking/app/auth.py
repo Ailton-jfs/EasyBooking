@@ -3,12 +3,17 @@ import bcrypt
 MAX_TENTATIVAS = 3
 
 
-def registrar(conn, nome, senha, role="user"):
+def registrar(conn, nome, senha, nome_completo, email, role="user"):
+    if conn.execute("SELECT 1 FROM usuarios WHERE nome = ?", (nome,)).fetchone():
+        return "nome"
+    if email and conn.execute("SELECT 1 FROM usuarios WHERE email = ?", (email,)).fetchone():
+        return "email"
+
     senha_hash = bcrypt.hashpw(senha.encode(), bcrypt.gensalt())
     try:
         conn.execute(
-            "INSERT INTO usuarios (nome, senha_hash, role) VALUES (?, ?, ?)",
-            (nome, senha_hash, role),
+            "INSERT INTO usuarios (nome, nome_completo, email, senha_hash, role) VALUES (?, ?, ?, ?, ?)",
+            (nome, nome_completo, email, senha_hash, role),
         )
         conn.commit()
         return True
@@ -50,3 +55,31 @@ def excluir_usuario(conn, nome):
     result = conn.execute("DELETE FROM usuarios WHERE nome = ?", (nome,))
     conn.commit()
     return result.rowcount > 0
+
+
+def obter_usuario(conn, nome):
+    return conn.execute(
+        "SELECT nome, nome_completo, email, role FROM usuarios WHERE nome = ?", (nome,)
+    ).fetchone()
+
+
+def atualizar_usuario(conn, nome, nome_completo, email, senha=None):
+    existing = conn.execute(
+        "SELECT nome FROM usuarios WHERE email = ? AND nome != ?", (email, nome)
+    ).fetchone()
+    if existing:
+        return "email"
+
+    if senha:
+        senha_hash = bcrypt.hashpw(senha.encode(), bcrypt.gensalt())
+        conn.execute(
+            "UPDATE usuarios SET nome_completo = ?, email = ?, senha_hash = ? WHERE nome = ?",
+            (nome_completo, email, senha_hash, nome),
+        )
+    else:
+        conn.execute(
+            "UPDATE usuarios SET nome_completo = ?, email = ? WHERE nome = ?",
+            (nome_completo, email, nome),
+        )
+    conn.commit()
+    return True

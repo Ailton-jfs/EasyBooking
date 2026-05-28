@@ -8,8 +8,8 @@ from app.auth import registrar, login
 def conn():
     c = get_connection()
     init_db(c)
-    registrar(c, "joao", "Joao123")
-    registrar(c, "maria", "Maria123")
+    registrar(c, "joao", "Joao123", "João Silva", "joao@easybooking.com")
+    registrar(c, "maria", "Maria123", "Maria Souza", "maria@easybooking.com")
     return c
 
 

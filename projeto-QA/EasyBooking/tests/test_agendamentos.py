@@ -1,6 +1,7 @@
 # CENÁRIO 3 — VALIDAÇÃO DE AGENDAMENTO
 import pytest
 from app.db import get_connection, init_db
+from app import agendamentos
 from app.agendamentos import criar, cancelar, listar, SERVICOS, HORARIOS
 
 
@@ -42,8 +43,38 @@ def test_data_no_passado(conn):
     assert criar(conn, "lucas", "2020-01-01", "08:00", "Consulta Médica") == "Erro: não é possível agendar em datas passadas"
 
 
+def test_horario_personalizado_valido(conn):
+    resultado = criar(conn, "ana", "2026-06-01", "08:30", "Atendimento ao Cliente")
+    assert "confirmado" in resultado
+
+
+def test_horario_personalizado_fora_do_expediente(conn):
+    assert criar(conn, "lucas", "2026-06-01", "18:30", "Consulta Médica") == "Erro: horário inválido"
+
+
 def test_horario_invalido(conn):
     assert criar(conn, "lucas", "2026-06-01", "07:30", "Consulta Médica") == "Erro: horário inválido"
+
+
+def test_proximo_horario_livre(conn):
+    proximo = agendamentos.proximo_horario_livre(conn, "2026-06-01")
+    assert proximo == "08:00"
+
+
+def test_proximo_horario_livre_com_occupado(conn):
+    assert criar(conn, "ana", "2026-06-01", "08:00", "Atendimento ao Cliente")
+    proximo = agendamentos.proximo_horario_livre(conn, "2026-06-01")
+    assert proximo == "09:00"
+
+
+def test_proximo_dia_com_slot(conn):
+    # Preenche todos os horários de 2026-06-01 para forçar a próxima data
+    for h in HORARIOS:
+        criar(conn, f"u_{h}", "2026-06-01", h, "Consulta Médica")
+    next_pair = agendamentos.proximo_dia_com_slot(conn, "2026-06-01")
+    assert isinstance(next_pair, tuple)
+    assert next_pair[0] == "2026-06-02"
+    assert next_pair[1] == "08:00"
 
 
 def test_servico_invalido(conn):

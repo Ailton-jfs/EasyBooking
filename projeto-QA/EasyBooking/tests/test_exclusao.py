@@ -8,9 +8,9 @@ from app.auth import registrar, excluir_usuario
 def conn():
     c = get_connection()
     init_db(c)
-    registrar(c, "joao", "Joao123")
-    registrar(c, "maria", "Maria123")
-    registrar(c, "ana", "Ana123")
+    registrar(c, "joao", "Joao123", "João Silva", "joao@easybooking.com")
+    registrar(c, "maria", "Maria123", "Maria Silva", "maria@easybooking.com")
+    registrar(c, "ana", "Ana123", "Ana Souza", "ana@easybooking.com")
     return c
 
 

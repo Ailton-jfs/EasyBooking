@@ -31,7 +31,7 @@ def main():
     init_db(conn)
 
     # cria admin padrão na primeira execução
-    auth.registrar(conn, "admin", "Admin123", role="admin")
+    auth.registrar(conn, "admin", "Admin123", "Administrador", "admin@easybooking.com", role="admin")
 
     usuario_logado = None
     role_logado = None
@@ -58,8 +58,10 @@ def main():
 
             elif opcao == "2":
                 nome = input("Usuário: ").strip()
+                nome_completo = input("Nome completo: ").strip()
+                email = input("E-mail: ").strip()
                 senha = input("Senha: ").strip()
-                if auth.registrar(conn, nome, senha):
+                if auth.registrar(conn, nome, senha, nome_completo, email):
                     print("Usuário registrado com sucesso!")
                 else:
                     print("Erro: nome de usuário já existe.")
