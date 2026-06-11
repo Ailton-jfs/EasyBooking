@@ -749,3 +749,46 @@ tbody tr:hover td { background: #f8fafc; }
 }
 
 .auth-link a:hover { text-decoration: underline; }
+
+/* ─── ACTION BUTTONS ─────────────────────── */
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0;
+}
+
+.btn-icon:hover {
+  background: #e2e8f0;
+}
+
+.btn-edit {
+  color: #2563eb;
+}
+
+.btn-edit:hover {
+  background: #eff6ff;
+}
+
+.btn-delete {
+  color: #dc2626;
+}
+
+.btn-delete:hover {
+  background: #fef2f2;
+}
+

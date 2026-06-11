@@ -103,7 +103,8 @@ def dia_semana(value):
         return ""
 
 
-with app.app_context():
+def init_admin():
+    """Inicializa o usuário admin se não existir"""
     _conn = get_connection(DB_PATH)
     init_db(_conn)
     auth.registrar(_conn, "admin", "Admin123", "Administrador", "admin@easybooking.com", role="admin")
@@ -329,6 +330,92 @@ def admin():
     )
 
 
+@app.route("/admin/deletar-usuario/<nome>", methods=["POST"])
+def admin_deletar_usuario(nome):
+    if session.get("role") != "admin":
+        flash("Acesso negado.", "erro")
+        return redirect(url_for("dashboard"))
+    
+    if nome == "admin":
+        flash("Não é possível deletar o usuário admin.", "erro")
+        return redirect(url_for("admin"))
+    
+    if auth.excluir_usuario(get_db(), nome):
+        flash(f"Usuário '{nome}' deletado com sucesso.", "sucesso")
+    else:
+        flash(f"Erro ao deletar usuário '{nome}'.", "erro")
+    
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/deletar-agendamento/<int:ag_id>", methods=["POST"])
+def admin_deletar_agendamento(ag_id):
+    if session.get("role") != "admin":
+        flash("Acesso negado.", "erro")
+        return redirect(url_for("dashboard"))
+    
+    row = get_db().execute(
+        "SELECT * FROM agendamentos WHERE id = ?", (ag_id,)
+    ).fetchone()
+    
+    if not row:
+        flash("Agendamento não encontrado.", "erro")
+        return redirect(url_for("admin"))
+    
+    get_db().execute("DELETE FROM agendamentos WHERE id = ?", (ag_id,))
+    get_db().commit()
+    flash("Agendamento deletado com sucesso.", "sucesso")
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/editar-usuario/<nome>", methods=["GET", "POST"])
+def admin_editar_usuario(nome):
+    if session.get("role") != "admin":
+        flash("Acesso negado.", "erro")
+        return redirect(url_for("dashboard"))
+    
+    user = auth.obter_usuario(get_db(), nome)
+    if not user:
+        flash("Usuário não encontrado.", "erro")
+        return redirect(url_for("admin"))
+    
+    if request.method == "POST":
+        nome_completo = request.form.get("nome_completo", "").strip()
+        email = request.form.get("email", "").strip()
+        role = request.form.get("role", "user").strip()
+        nova_senha = request.form.get("senha", "").strip()
+        
+        if not nome_completo or not email:
+            flash("Preencha nome completo e e-mail.", "erro")
+        elif not validar_email(email):
+            flash("Informe um e-mail válido.", "erro")
+        elif role not in ["user", "admin"]:
+            flash("Perfil inválido.", "erro")
+        else:
+            if nova_senha and validar_senha_erro(nova_senha):
+                flash(validar_senha_erro(nova_senha), "erro")
+            else:
+                auth.atualizar_usuario(get_db(), nome, nome_completo, email, nova_senha if nova_senha else None)
+                
+                # Atualizar role se mudou
+                if nova_senha:
+                    get_db().execute(
+                        "UPDATE usuarios SET role = ? WHERE nome = ?",
+                        (role, nome)
+                    )
+                else:
+                    get_db().execute(
+                        "UPDATE usuarios SET nome_completo = ?, email = ?, role = ? WHERE nome = ?",
+                        (nome_completo, email, role, nome)
+                    )
+                get_db().commit()
+                
+                flash("Usuário atualizado com sucesso.", "sucesso")
+                return redirect(url_for("admin"))
+    
+    return render_template("editar_usuario.html", user=dict(user), active="admin")
+
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -336,4 +423,6 @@ def logout():
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        init_admin()
     app.run(debug=True)
